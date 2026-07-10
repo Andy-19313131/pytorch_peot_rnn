@@ -1,0 +1,13 @@
+python_version: 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+platform: Windows-11-10.0.26200-SP0
+processor: AMD64 Family 26 Model 68 Stepping 1, AuthenticAMD
+pytorch_version: 2.13.0+cpu
+cuda_available: False
+numpy_version: 2.5.0
+gpu_name: N/A (CPU only)
+cuda_version: N/A
+git_commit: 5abd4203d99572b7a18079ad5769ee27ea57c2a4
+data_count: 57598
+vocab_size: 8840
+total_params: 6021608
+trainable_params: 6021608
