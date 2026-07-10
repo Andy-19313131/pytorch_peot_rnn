@@ -1,0 +1,36 @@
+# 原始仓库基线配置（修正前）
+data:
+  data_dir: "./data/"
+  data_path: "./data/peot.txt"
+  pickle_path: "./data/tang.npz"
+  max_len: 125
+
+model:
+  type: "PoetryModel2"
+  embedding_dim: 300
+  hidden_dim: 256
+  num_layers: 2
+  vocab_size: null  # 动态确定
+
+training:
+  batch_size: 128
+  num_epoch: 20
+  lr: 0.001
+  weight_decay: 0.0001  # 原代码定义但未使用
+  optimizer: "Adam"
+  device: "auto"
+  seed: 123
+
+generation:
+  max_gen_len: 200
+  strategy: "greedy"  # topk(1)
+
+paths:
+  load_path: "./checkpoints/peot.pt"
+  save_path: "./checkpoints/peot.pt"
+
+flags:
+  do_train: false
+  do_test: false
+  do_predict: true
+  do_load_model: true
