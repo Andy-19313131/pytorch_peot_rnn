@@ -19,7 +19,7 @@ def split_train_test(data, train_ratio=0.8, shuffle=True):
     total = len(data)
     train_total = int(total * train_ratio)
     train_data = data[:train_total]
-    test_data = data[:train_total]
+    test_data = data[train_total:]
     print('总共有数据{}条'.format(total))
     print('划分后，训练集{}条'.format(train_total))
     print('划分后，测试集{}条'.format(total - train_total))
@@ -104,12 +104,12 @@ class Trainer:
 
         if prefix_words:
             for word in prefix_words:
-                output, hidden = model(input, hidden)
+                output, hidden = self.model(input, hidden)
                 input = input.data.new([self.config.word2idx[word]]).view(1, 1)
 
         for i in range(self.config.max_gen_len):
             # 初始化的时候input=[[2]], hidden=None
-            output, hidden = model(input, hidden)
+            output, hidden = self.model(input, hidden)
 
             if i < start_word_len:
                 w = results[i]
@@ -146,11 +146,11 @@ class Trainer:
 
         if prefix_words:
             for word in prefix_words:
-                output, hidden = model(input, hidden)
+                output, hidden = self.model(input, hidden)
                 input = (input.data.new([self.config.word2idx[word]])).view(1, 1)
 
         for i in range(self.config.max_gen_len):
-            output, hidden = model(input, hidden)
+            output, hidden = self.model(input, hidden)
             top_index = output.data[0].topk(1)[1][0].item()
             w = self.config.idx2word[top_index]
 
