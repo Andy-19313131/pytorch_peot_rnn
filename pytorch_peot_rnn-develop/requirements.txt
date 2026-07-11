@@ -1,0 +1,9 @@
+torch
+numpy
+pandas
+matplotlib
+tqdm
+pyyaml
+scikit-learn
+opencc-python-reimplemented
+pypinyin
