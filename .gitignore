@@ -11,6 +11,7 @@ build/
 .vscode/
 data/raw/
 checkpoints/
+results/checkpoints/
 *.pt
 *.pth
 *.log
