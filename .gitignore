@@ -8,3 +8,4 @@ build/
 .ipynb_checkpoints/
 .vscode/
 .idea/
+results/checkpoints/
