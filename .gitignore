@@ -1,6 +1,12 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.ipynb_checkpoints/
 .idea/
 .vscode/
 data/raw/
