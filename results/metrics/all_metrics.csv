@@ -1,0 +1,5 @@
+﻿strategy,n,test_loss,test_ppl,test_acc,format_correctness,line_length_accuracy,line_count_accuracy,rhyme_consistency,distinct_1,distinct_2,repeat_bigram_ratio,adjacent_repeat_rate,train_set_overlap,train_4gram_overlap,unique_ratio
+greedy,16,4.23836,69.294142,0.293798,1.0,1.0,1.0,0.0,0.213542,0.385714,0.614286,0.014286,0.0,0.151515,0.5
+topk,16,4.23836,69.294142,0.293798,1.0,1.0,1.0,0.020833,0.411458,0.932143,0.067857,0.008929,0.0,0.028409,1.0
+topp,16,4.23836,69.294142,0.293798,1.0,1.0,1.0,0.0,0.559028,0.980357,0.019643,0.005357,0.0,0.015152,1.0
+constrained,16,4.23836,69.294142,0.293798,1.0,1.0,1.0,0.0,0.428819,0.953571,0.046429,0.039286,0.0,0.018939,1.0

@@ -18,10 +18,54 @@ import difflib
 
 import numpy as np
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 matplotlib.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
 matplotlib.rcParams['axes.unicode_minus'] = False
+
+# ==================== 图表风格配置 ====================
+
+CHART_COLORS = {
+    'ink': '#1F2937',
+    'muted': '#6B7280',
+    'grid': '#E5E7EB',
+    'blue': '#2563EB',
+    'cyan': '#0891B2',
+    'green': '#059669',
+    'amber': '#D97706',
+    'rose': '#E11D48',
+    'violet': '#7C3AED',
+    'slate': '#64748B',
+}
+
+FORM_COLORS = [
+    CHART_COLORS['blue'],
+    CHART_COLORS['cyan'],
+    CHART_COLORS['green'],
+    CHART_COLORS['amber'],
+    CHART_COLORS['rose'],
+    CHART_COLORS['violet'],
+]
+
+
+def _style_axes(ax, title, xlabel=None, ylabel=None, grid_axis='y'):
+    """统一统计图的版式，避免不同图之间视觉风格割裂。"""
+    ax.set_facecolor('#FBFCFE')
+    ax.figure.set_facecolor('white')
+    ax.set_title(title, fontsize=16, fontweight='bold', color=CHART_COLORS['ink'], pad=14)
+    if xlabel:
+        ax.set_xlabel(xlabel, fontsize=12, color=CHART_COLORS['ink'], labelpad=10)
+    if ylabel:
+        ax.set_ylabel(ylabel, fontsize=12, color=CHART_COLORS['ink'], labelpad=10)
+
+    ax.tick_params(axis='both', colors=CHART_COLORS['muted'], labelsize=10)
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_color(CHART_COLORS['grid'])
+    ax.spines['bottom'].set_color(CHART_COLORS['grid'])
+    ax.grid(axis=grid_axis, color=CHART_COLORS['grid'], linewidth=0.9, alpha=0.9)
+    ax.set_axisbelow(True)
 
 # ==================== 路径配置（v5.1：适配 src/data.py） ====================
 # 从 src/data.py 向上定位到项目根目录
@@ -202,13 +246,34 @@ def analyze_basic(poems):
     print(f"中位数: {np.median(lengths):.1f} 字")
 
     fig_path = os.path.join(RESULTS_FIGURES, 'length_distribution.png')
-    plt.figure(figsize=(10, 5))
-    plt.hist(lengths, bins=50, edgecolor='black', color='skyblue')
-    plt.xlabel('诗歌长度（字）', fontsize=12)
-    plt.ylabel('数量', fontsize=12)
-    plt.title('诗歌长度分布', fontsize=14)
-    plt.grid(axis='y', alpha=0.3)
-    plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+    fig, ax = plt.subplots(figsize=(11.5, 6.2))
+    cap = 220
+    display_lengths = np.clip(lengths, 0, cap)
+    bins = np.arange(0, cap + 10, 10)
+    ax.hist(display_lengths, bins=bins, color=CHART_COLORS['blue'], alpha=0.86,
+            edgecolor='white', linewidth=1.0)
+    _style_axes(ax, '诗歌长度分布', '诗歌长度（字）', '数量（首）')
+
+    mean_len = float(np.mean(lengths))
+    median_len = float(np.median(lengths))
+    for value, label, color in [
+        (mean_len, f'均值 {mean_len:.1f}', CHART_COLORS['rose']),
+        (median_len, f'中位数 {median_len:.1f}', CHART_COLORS['green']),
+    ]:
+        if value <= cap:
+            ax.axvline(value, color=color, linestyle='--', linewidth=1.8, label=label)
+    legend = ax.legend(loc='upper right', frameon=True, fontsize=10)
+    legend.get_frame().set_facecolor('white')
+    legend.get_frame().set_edgecolor(CHART_COLORS['grid'])
+
+    xticks = list(range(0, cap, 20)) + [cap]
+    ax.set_xticks(xticks)
+    ax.set_xticklabels([str(x) for x in xticks[:-1]] + [f'{cap}+'])
+    ax.text(0.99, -0.16, '注：右端 220+ 合并长篇样本，便于观察主体分布。',
+            transform=ax.transAxes, ha='right', va='top',
+            fontsize=9, color=CHART_COLORS['muted'])
+    fig.tight_layout()
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ 已保存: {fig_path}")
     return lengths
@@ -274,29 +339,50 @@ def analyze_form(poems):
             print(f"    {n_sent}句: {count} 首")
 
     fig_path_pie = os.path.join(RESULTS_FIGURES, 'form_distribution_pie.png')
-    plt.figure(figsize=(8, 8))
     labels = list(forms.keys())
     sizes = list(forms.values())
-    colors = ['#ff9999', '#66b3ff', '#99ff99', '#ffcc99', '#c2c2f0', '#ff99cc']
-    plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
-    plt.title('诗歌体裁分布（饼图）', fontsize=14)
-    plt.savefig(fig_path_pie, dpi=150, bbox_inches='tight')
+    colors = FORM_COLORS
+    fig, ax = plt.subplots(figsize=(8.4, 8.4))
+    wedges, texts, autotexts = ax.pie(
+        sizes,
+        labels=labels,
+        autopct=lambda pct: f'{pct:.1f}%' if pct >= 1 else '',
+        colors=colors,
+        startangle=90,
+        counterclock=False,
+        pctdistance=0.78,
+        wedgeprops={'width': 0.42, 'edgecolor': 'white', 'linewidth': 2},
+        textprops={'fontsize': 11, 'color': CHART_COLORS['ink']},
+    )
+    for text in autotexts:
+        text.set_color('white')
+        text.set_fontweight('bold')
+        text.set_fontsize(10)
+    ax.text(0, 0, f'{sum(sizes)}\n首诗', ha='center', va='center',
+            fontsize=15, fontweight='bold', color=CHART_COLORS['ink'])
+    ax.set_title('诗歌体裁分布（占比）', fontsize=16, fontweight='bold',
+                 color=CHART_COLORS['ink'], pad=14)
+    ax.axis('equal')
+    fig.tight_layout()
+    plt.savefig(fig_path_pie, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ 已保存: {fig_path_pie}")
 
     fig_path_bar = os.path.join(RESULTS_FIGURES, 'form_distribution.png')
-    plt.figure(figsize=(10, 6))
-    x_pos = range(len(labels))
-    bars = plt.bar(x_pos, sizes, color=colors, edgecolor='black')
-    plt.xticks(x_pos, labels, rotation=15)
-    plt.ylabel('数量', fontsize=12)
-    plt.title('诗歌体裁分布', fontsize=14)
-    plt.grid(axis='y', alpha=0.3)
+    fig, ax = plt.subplots(figsize=(11, 6.4))
+    x_pos = np.arange(len(labels))
+    bars = ax.bar(x_pos, sizes, color=colors, edgecolor='none', width=0.62)
+    _style_axes(ax, '诗歌体裁分布', None, '数量（首）')
+    ax.set_xticks(x_pos)
+    ax.set_xticklabels(labels, rotation=0)
+    ax.set_ylim(0, max(sizes) * 1.18)
     for bar, size in zip(bars, sizes):
-        plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + max(sizes)*0.01,
-                str(size), ha='center', va='bottom', fontsize=10)
-    plt.tight_layout()
-    plt.savefig(fig_path_bar, dpi=150, bbox_inches='tight')
+        pct = size / len(poems) * 100
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + max(sizes) * 0.02,
+                f'{size}\n{pct:.1f}%', ha='center', va='bottom',
+                fontsize=10, color=CHART_COLORS['ink'], fontweight='bold')
+    fig.tight_layout()
+    plt.savefig(fig_path_bar, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ 已保存: {fig_path_bar}")
 
@@ -318,17 +404,25 @@ def analyze_authors(poems):
     print(f"\n前10位作者占比: {top10_count/total*100:.1f}%")
 
     fig_path = os.path.join(RESULTS_FIGURES, 'top_authors.png')
-    plt.figure(figsize=(12, 6))
-    authors = [a for a, _ in top20]
-    counts = [c for _, c in top20]
-    plt.barh(range(len(authors)), counts, color='steelblue')
-    plt.yticks(range(len(authors)), authors)
-    plt.xlabel('作品数量', fontsize=12)
-    plt.title('作者作品数量 Top 20', fontsize=14)
-    plt.gca().invert_yaxis()
-    plt.grid(axis='x', alpha=0.3)
-    plt.tight_layout()
-    plt.savefig(fig_path, dpi=150, bbox_inches='tight')
+    fig, ax = plt.subplots(figsize=(12, 7.8))
+    authors = [a for a, _ in reversed(top20)]
+    counts = [c for _, c in reversed(top20)]
+    bar_colors = [CHART_COLORS['slate']] * len(authors)
+    if len(bar_colors) >= 3:
+        bar_colors[-1] = CHART_COLORS['blue']
+        bar_colors[-2] = CHART_COLORS['cyan']
+        bar_colors[-3] = CHART_COLORS['green']
+    ax.barh(range(len(authors)), counts, color=bar_colors, edgecolor='none', height=0.68)
+    _style_axes(ax, '作者作品数量 Top 20', '作品数量（首）', None, grid_axis='x')
+    ax.set_yticks(range(len(authors)))
+    ax.set_yticklabels(authors)
+    max_count = max(counts)
+    ax.set_xlim(0, max_count * 1.18)
+    for y_pos, count in enumerate(counts):
+        ax.text(count + max_count * 0.012, y_pos, f'{count}  ({count/total*100:.1f}%)',
+                va='center', ha='left', fontsize=9.5, color=CHART_COLORS['ink'])
+    fig.tight_layout()
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
     plt.close()
     print(f"✓ 已保存: {fig_path}")
     return author_counter
